@@ -8,6 +8,7 @@ import CategorySlider      from '../components/ui/CategorySlider'
 import ProductCard         from '../components/product/ProductCard'
 import { SkeletonGrid }    from '../components/ui/SkeletonCard'
 import Footer              from '../components/layout/Footer'
+import LocationMapPicker   from '../components/ui/LocationMapPicker'
 import { getProducts }     from '../services/productService'
 import { useAuth }         from '../context/AuthContext'
 
@@ -337,8 +338,10 @@ export default function HomePage() {
   const [recent,   setRecent]       = useState([])
   const [loadF,    setLoadF]        = useState(true)
   const [loadR,    setLoadR]        = useState(true)
-  const [locating, setLocating]     = useState(false)
-  const [locDenied, setLocDenied]   = useState(false)
+  const [locating,    setLocating]    = useState(false)
+  const [locDenied,   setLocDenied]   = useState(false)
+  const [showMap,     setShowMap]     = useState(false)
+  const [gpsCoords,   setGpsCoords]   = useState({ lat: 28.6139, lng: 77.2090 })
   const [cachedCoords, setCachedCoords] = useState(() => {
     // Load cached coords from sessionStorage on mount
     try {
@@ -355,7 +358,7 @@ export default function HomePage() {
   }, [])
 
   const handleNearYou = useCallback(async () => {
-    // Use cached coords if fresh (< 30 min old)
+    // Use cached coords if fresh (< 30 min old) — skip map
     if (cachedCoords) {
       const age = Date.now() - cachedCoords.timestamp
       if (age < 30 * 60 * 1000) {
@@ -363,61 +366,79 @@ export default function HomePage() {
         navigate(`/search?lat=${cachedCoords.lat}&lng=${cachedCoords.lng}&near=1${locParam}`)
         return
       }
-      // Stale — clear and re-detect
       try { sessionStorage.removeItem('nextowner_coords') } catch {}
       setCachedCoords(null)
     }
 
     if (!navigator.geolocation) {
-      toast.error('Location not supported on this device')
+      // No GPS → open map at default (Delhi) so user can drag manually
+      setShowMap(true)
       return
     }
 
     setLocating(true)
     navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        const { latitude: lat, longitude: lng } = pos.coords
-        const latStr = lat.toFixed(6)   // 6 decimal places → ~11 cm accuracy
-        const lngStr = lng.toFixed(6)
-
-        // Reverse geocode to building-level place name
-        const address = await reverseGeocode(latStr, lngStr)
-
-        const coords = { lat: latStr, lng: lngStr, address, timestamp: Date.now() }
+      ({ coords: { latitude: lat, longitude: lng } }) => {
         setLocating(false)
-        setCachedCoords(coords)
-        try { sessionStorage.setItem('nextowner_coords', JSON.stringify(coords)) } catch {}
-
-        const locParam = address ? `&loc=${encodeURIComponent(address)}` : ''
-        navigate(`/search?lat=${coords.lat}&lng=${coords.lng}&near=1${locParam}`)
+        setGpsCoords({ lat, lng })
+        setShowMap(true)          // open map centred on GPS position
       },
       (err) => {
         setLocating(false)
         if (err.code === 1) {
-          setLocDenied(true)   // show the help modal
+          setLocDenied(true)      // permission denied → show help modal
         } else {
-          toast.error('Could not get your location. Please try again.')
+          setShowMap(true)        // other error → open map at default
         }
       },
-      // High accuracy → triggers GPS chip on mobile for building-level precision
-      { timeout: 15000, maximumAge: 0, enableHighAccuracy: true }
+      { timeout: 12000, maximumAge: 0, enableHighAccuracy: true }
     )
   }, [cachedCoords, navigate])
 
+  /* Called when user taps "Use This Location" in the map picker */
+  const handleMapConfirm = useCallback(({ lat, lng, address }) => {
+    const latStr = Number(lat).toFixed(6)
+    const lngStr = Number(lng).toFixed(6)
+    const coords = { lat: latStr, lng: lngStr, address, timestamp: Date.now() }
+    setCachedCoords(coords)
+    try { sessionStorage.setItem('nextowner_coords', JSON.stringify(coords)) } catch {}
+    setShowMap(false)
+    const locParam = address ? `&loc=${encodeURIComponent(address)}` : ''
+    navigate(`/search?lat=${latStr}&lng=${lngStr}&near=1${locParam}`)
+  }, [navigate])
+
   useEffect(() => {
+    // Deduplicate helper — prevents showing same _id twice
+    const uniq = (arr) => {
+      const seen = new Set()
+      return arr.filter(p => { if (seen.has(p._id)) return false; seen.add(p._id); return true })
+    }
+
     getProducts({ featured: '1', limit: 8 })
-      .then(d => setFeatured(d.products?.length ? d.products : DEMO.slice(0, 4)))
+      .then(d => setFeatured(uniq(d.products?.length ? d.products : DEMO.slice(0, 4))))
       .catch(()  => setFeatured(DEMO.slice(0, 4)))
       .finally(() => setLoadF(false))
 
     getProducts({ sort: 'newest', limit: 8 })
-      .then(d => setRecent(d.products?.length ? d.products : DEMO))
+      .then(d => setRecent(uniq(d.products?.length ? d.products : DEMO)))
       .catch(()  => setRecent(DEMO))
       .finally(() => setLoadR(false))
   }, [])
 
   return (
     <div className="min-h-screen pb-[120px]" style={{ background: '#0c0c10' }}>
+
+      {/* Location map picker */}
+      <AnimatePresence>
+        {showMap && (
+          <LocationMapPicker
+            initialLat={gpsCoords.lat}
+            initialLng={gpsCoords.lng}
+            onConfirm={handleMapConfirm}
+            onClose={() => setShowMap(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Location permission denied modal */}
       <AnimatePresence>

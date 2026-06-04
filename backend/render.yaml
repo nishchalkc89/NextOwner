@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: nextowner-api
+    env: node
+    region: singapore          # closest to India/Nepal
+    plan: free
+    rootDir: .                 # backend folder
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"
+      # ── Set these manually in Render dashboard → Environment ──
+      - key: MONGODB_URI
+        sync: false            # paste your Atlas URI
+      - key: JWT_SECRET
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: MAIL_USER
+        sync: false
+      - key: MAIL_PASS
+        sync: false
+      - key: SUPPORT_EMAIL
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: CLIENT_URL
+        sync: false            # your Vercel frontend URL
