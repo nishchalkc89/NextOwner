@@ -97,7 +97,7 @@ export default function AboutPage() {
         {/* ── Hero ── */}
         <motion.div {...fade(0.05)} className="pt-14 pb-12 lg:pt-20 lg:pb-16 text-center">
           <img
-            src="/logo.svg"
+            src="/logo.png"
             alt="NextOwner"
             className="mx-auto mb-8"
             style={{ height: 68, width: 'auto' }}

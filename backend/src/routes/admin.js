@@ -4,7 +4,21 @@ const User = require('../models/User')
 const Product = require('../models/Product')
 const Message = require('../models/Message')
 const Notification = require('../models/Notification')
-const { sendSuspensionNotice, sendVerificationApproved } = require('../config/mailer')
+const { sendSuspensionNotice, sendVerificationApproved, sendMail } = require('../config/mailer')
+
+// Inline HTML wrapper for unban email (same template system as mailer.js)
+const wrap = (body) => `<!DOCTYPE html><html><head><meta charset="utf-8"/><style>
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#09090b;color:#e4e4e7;margin:0;padding:0}
+.w{max-width:560px;margin:32px auto;padding:0 16px}.c{background:#18181b;border:1px solid rgba(255,255,255,0.08);border-radius:16px;overflow:hidden}
+.h{background:linear-gradient(135deg,#f97316,#7c6af7);padding:24px 28px}.h h1{margin:0;color:#fff;font-size:20px;font-weight:800}
+.b{padding:28px}.b p{margin:0 0 14px;font-size:14px;line-height:1.6;color:#a1a1aa}.b strong{color:#e4e4e7}
+.cta{display:inline-block;margin-top:8px;padding:12px 24px;background:linear-gradient(135deg,#f97316,#ea580c);color:#fff!important;text-decoration:none;border-radius:10px;font-size:13px;font-weight:700}
+.f{padding:16px 28px;border-top:1px solid rgba(255,255,255,0.06)}.f p{margin:0;font-size:11px;color:#52525b}
+</style></head><body><div class="w"><div class="c">
+<div class="h"><h1>NextOwner</h1></div>
+<div class="b">${body}</div>
+<div class="f"><p>NextOwner Support</p></div>
+</div></div></body></html>`
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@nextowner.in'
 const ADMIN_PASS  = process.env.ADMIN_PASSWORD || 'admin@123'
@@ -143,8 +157,32 @@ router.put('/users/:id/ban', adminProtect, async (req, res) => {
     const { reason } = req.body
     const user = await User.findByIdAndUpdate(req.params.id, { banned: true }, { new: true })
     if (!user) return res.status(404).json({ message: 'User not found' })
-    // Notify the user via email (fire-and-forget)
     sendSuspensionNotice({ to: user.email, name: user.name, reason }).catch(() => {})
+    res.json({ ok: true })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+})
+
+/* PUT /api/admin/users/:id/unban */
+router.put('/users/:id/unban', adminProtect, async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(req.params.id, { banned: false }, { new: true })
+    if (!user) return res.status(404).json({ message: 'User not found' })
+    // Notify user their account is restored
+    sendMail({
+      to:      user.email,
+      subject: 'Your NextOwner account has been restored',
+      html: wrap(`
+        <p>Hi <strong>${user.name || 'there'}</strong>,</p>
+        <p>Great news! Your NextOwner account has been <strong>reinstated</strong>. You can now sign in and continue using the platform.</p>
+        <a href="${process.env.CLIENT_URL || 'http://localhost:5173'}/login" class="cta">Sign In Now</a>
+        <p style="margin-top:16px;font-size:12px;color:#52525b">
+          If you believe this was an error or have questions, contact us at ${ADMIN_EMAIL}.
+        </p>
+      `),
+      text: `Hi ${user.name}, your NextOwner account has been restored. You can now sign in.`,
+    }).catch(() => {})
     res.json({ ok: true })
   } catch (err) {
     res.status(500).json({ message: err.message })

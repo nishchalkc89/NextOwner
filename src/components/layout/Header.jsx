@@ -146,7 +146,7 @@ export default function Header({ desktopMode = false }) {
           className="flex items-center -ml-1"
         >
           <img
-            src="/logo.svg"
+            src="/logo.png"
             alt="NextOwner"
             className="object-contain"
             style={{ height: 48, width: 'auto', maxWidth: 160 }}

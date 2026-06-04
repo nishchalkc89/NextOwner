@@ -124,6 +124,14 @@ export default function AdminDashboard() {
     } catch { toast.error('Ban failed') }
   }
 
+  const handleUnbanUser = async (userId) => {
+    try {
+      await a.put(`/admin/users/${userId}/unban`)
+      setUsers(prev => prev.map(u => u._id === userId ? { ...u, banned: false } : u))
+      toast.success('User unbanned ✅')
+    } catch { toast.error('Unban failed') }
+  }
+
   const logout = () => { localStorage.removeItem('admin_token'); navigate('/admin') }
 
   /* ── Layout ── */
@@ -480,7 +488,13 @@ export default function AdminDashboard() {
                             : <p className="text-gray-700 text-[10px]">{u.university || '—'}</p>
                           }
                         </div>
-                        {!u.banned && (
+                        {u.banned ? (
+                          <motion.button whileTap={{ scale: 0.88 }} onClick={() => handleUnbanUser(u._id)}
+                            className="px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1 flex-shrink-0"
+                            style={{ background: 'rgba(52,211,153,0.10)', color: '#34d399', border: '1px solid rgba(52,211,153,0.22)' }}>
+                            ✓ Unban
+                          </motion.button>
+                        ) : (
                           <motion.button whileTap={{ scale: 0.88 }} onClick={() => handleBanUser(u._id)}
                             className="px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1 flex-shrink-0"
                             style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171', border: '1px solid rgba(239,68,68,0.2)' }}>

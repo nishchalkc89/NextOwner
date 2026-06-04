@@ -49,7 +49,7 @@ export default function Footer() {
               className="block mb-3"
             >
               <img
-                src="/logo.svg"
+                src="/logo.png"
                 alt="NextOwner"
                 className="w-auto"
                 style={{ height: 85, maxWidth: 220 }}

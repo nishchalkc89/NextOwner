@@ -126,7 +126,7 @@ export default function ForgotPasswordPage() {
               {/* Logo + heading */}
               <div className="flex flex-col items-center mb-8">
                 <img
-                  src="/logo.svg"
+                  src="/logo.png"
                   alt="NextOwner"
                   className="object-contain mb-5"
                   style={{ height: 90, width: 'auto', maxWidth: 240 }}

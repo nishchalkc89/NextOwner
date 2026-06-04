@@ -43,7 +43,7 @@ export default function Sidebar() {
         style={{ height: 68, borderBottom: '1px solid rgba(255,255,255,0.052)' }}
       >
         <motion.button whileTap={{ scale: 0.94 }} onClick={() => navigate('/')}>
-          <img src="/logo.svg" alt="NextOwner" style={{ height: 52, width: 'auto', maxWidth: 176 }} />
+          <img src="/logo.png" alt="NextOwner" style={{ height: 52, width: 'auto', maxWidth: 176 }} />
         </motion.button>
       </div>
 

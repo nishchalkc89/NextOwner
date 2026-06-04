@@ -153,7 +153,7 @@ export default function LoginPage() {
           className="flex flex-col items-center mb-8"
         >
           <img
-            src="/logo.svg"
+            src="/logo.png"
             alt="NextOwner"
             className="object-contain mb-5"
             style={{ height: 100, width: 'auto', maxWidth: 260 }}

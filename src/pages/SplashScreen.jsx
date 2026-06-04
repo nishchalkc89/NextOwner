@@ -33,7 +33,7 @@ export default function SplashScreen({ onDone }) {
           className="drop-shadow-2xl"
         >
           <img
-            src="/logo.svg"
+            src="/logo.png"
             alt="NextOwner"
             className="object-contain"
             style={{ height: 150, width: 'auto', maxWidth: 280 }}
