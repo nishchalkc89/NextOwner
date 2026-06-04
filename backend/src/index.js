@@ -32,6 +32,9 @@ const allowedOrigins = [
   ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map(s => s.trim()) : []),
 ]
 
+console.log('CLIENT_URL:', process.env.CLIENT_URL)
+console.log('Allowed Origins:', allowedOrigins)
+
 const io = new Server(server, {
   cors: { origin: allowedOrigins, methods: ['GET', 'POST'], credentials: true },
 })
