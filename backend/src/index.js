@@ -15,7 +15,11 @@ const Notification = require('./models/Notification')
 dotenv.config()
 connectDB()
 
-const app    = express()
+const app = express()
+
+// Required for Render + express-rate-limit
+app.set('trust proxy', 1)
+
 const server = http.createServer(app)
 
 // ── CORS — add VITE_CLIENT_URL / CLIENT_URL from env for production ──
