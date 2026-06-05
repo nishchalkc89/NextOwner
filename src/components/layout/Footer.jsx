@@ -57,7 +57,7 @@ export default function Footer() {
                 style={{ height: 85, maxWidth: 220 }}
               />
             </motion.button>
-            <p className="text-gray-600 text-[12px] leading-relaxed max-w-[200px]">
+            <p className="text-gray-600 text-[12px] leading-relaxed">
               The campus marketplace for students to buy, sell, and swap items.
             </p>
 
@@ -168,12 +168,10 @@ export default function Footer() {
           {/* Links row */}
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mb-3">
             {[
-              { label: 'Support',          href: `mailto:${SUPPORT_EMAIL}?subject=NextOwner Support`, external: true },
-              { label: 'Privacy Policy',   path: '/privacy'  },
-              { label: 'Terms & Conditions', path: '/terms'  },
-              { label: 'Contact Us',       path: '/contact'  },
-              { label: 'About Us',         path: '/about'    },
-              { label: 'Help Center',      path: '/help'     },
+              { label: 'Support',            href: `mailto:${SUPPORT_EMAIL}?subject=NextOwner Support`, external: true },
+              { label: 'Privacy Policy',     path: '/privacy' },
+              { label: 'Terms & Conditions', path: '/terms'   },
+              { label: 'Help Center',        path: '/help'    },
             ].map(({ label, path, href, external }) => (
               external
                 ? <a key={label} href={href}

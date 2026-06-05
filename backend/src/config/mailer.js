@@ -22,16 +22,24 @@ function createTransport() {
   const pass = process.env.MAIL_PASS
 
   if (!pass) {
-    console.warn('[mailer] MAIL_PASS not set — email sending is disabled.')
+    console.warn('[mailer] ⚠️  MAIL_PASS not set — email sending is disabled. Set it in your Render environment variables.')
     return null
   }
 
+  const port   = Number(process.env.MAIL_PORT) || 587
+  const secure = port === 465                         // true = SSL (465), false = STARTTLS (587)
+
+  console.log(`[mailer] Creating SMTP transport → ${process.env.MAIL_HOST || 'smtp.gmail.com'}:${port} (secure=${secure}) as ${user}`)
+
   return nodemailer.createTransport({
     host:   process.env.MAIL_HOST || 'smtp.gmail.com',
-    port:   Number(process.env.MAIL_PORT) || 587,
-    secure: false,           // STARTTLS on port 587
+    port,
+    secure,
     auth:   { user, pass },
     tls:    { rejectUnauthorized: false },
+    connectionTimeout: 15000,   // 15s — important on cloud (cold starts)
+    greetingTimeout:   10000,
+    socketTimeout:     15000,
   })
 }
 
@@ -45,10 +53,18 @@ function getTransport() {
 async function sendMail({ to, subject, html, text }) {
   const transport = getTransport()
   if (!transport) {
-    console.log(`[mailer] Would send "${subject}" to ${to}`)
+    console.log(`[mailer] Skipped: "${subject}" → ${to}  (no MAIL_PASS configured)`)
     return { skipped: true }
   }
-  return transport.sendMail({ from: FROM, to, subject, html, text })
+  try {
+    const info = await transport.sendMail({ from: FROM, to, subject, html, text })
+    console.log(`[mailer] ✓ Sent "${subject}" → ${to}  (messageId: ${info.messageId})`)
+    return info
+  } catch (err) {
+    console.error(`[mailer] ✗ Failed to send "${subject}" → ${to}:`, err.message)
+    _transport = null   // reset so the next call creates a fresh connection
+    throw err
+  }
 }
 
 /* ────────────────────────────────────────────────────────────

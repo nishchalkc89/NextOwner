@@ -128,6 +128,7 @@ router.put('/:id', protect, async (req, res) => {
     })
 
     await product.save()
+    await product.populate('seller', 'name avatar university isVerified')
     res.json(product)
   } catch (err) {
     res.status(500).json({ message: err.message })

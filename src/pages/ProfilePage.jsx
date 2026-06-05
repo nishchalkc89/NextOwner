@@ -216,12 +216,18 @@ function WishlistCard({ product: p, onRemove }) {
   )
 }
 
+const CATEGORIES = [
+  'Electronics','Books','Furniture','Clothing','Appliances',
+  'Hostel Essentials','Vehicles','Sports','Stationery','Other',
+]
+
 /* ── Edit Listing Modal ── */
 function EditListingModal({ product: p, onSave, onClose }) {
   const [form, setForm] = useState({
     title:       p.title       || '',
     description: p.description || '',
     price:       p.price       || '',
+    category:    p.category    || '',
     condition:   p.condition   || 'Good',
     negotiable:  p.negotiable  || false,
   })
@@ -285,17 +291,31 @@ function EditListingModal({ product: p, onSave, onClose }) {
               onChange={e => set('price', e.target.value)}
               className="flex-1 bg-transparent text-[13px] outline-none placeholder-gray-600" style={{ color: '#eeeef2' }} />
           </div>
+          {/* Category */}
+          <div className="rounded-[12px] px-4 h-11 flex items-center gap-2" style={inputStyle}>
+            <select value={form.category} onChange={e => set('category', e.target.value)}
+              className="flex-1 bg-transparent text-[13px] outline-none"
+              style={{ color: form.category ? '#eeeef2' : '#55555f', appearance: 'none' }}>
+              <option value="" disabled style={{ background: '#13131a' }}>Select category</option>
+              {CATEGORIES.map(c => (
+                <option key={c} value={c} style={{ background: '#13131a', color: '#eeeef2' }}>{c}</option>
+              ))}
+            </select>
+          </div>
           {/* Condition */}
-          <div className="flex flex-wrap gap-2">
-            {['Brand New','Like New','Good','Fair','Poor'].map(c => (
-              <button key={c} type="button" onClick={() => set('condition', c)}
-                className="px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all"
-                style={form.condition === c
-                  ? { background: 'rgba(249,115,22,0.15)', color: '#fb923c', borderColor: 'rgba(249,115,22,0.35)' }
-                  : { background: 'transparent', color: '#55555f', borderColor: 'rgba(255,255,255,0.08)' }}>
-                {c}
-              </button>
-            ))}
+          <div>
+            <p className="text-[10px] font-semibold mb-1.5 px-0.5" style={{ color: '#55555f' }}>CONDITION</p>
+            <div className="flex flex-wrap gap-2">
+              {['Brand New','Like New','Good','Fair','Poor'].map(c => (
+                <button key={c} type="button" onClick={() => set('condition', c)}
+                  className="px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all"
+                  style={form.condition === c
+                    ? { background: 'rgba(249,115,22,0.15)', color: '#fb923c', borderColor: 'rgba(249,115,22,0.35)' }
+                    : { background: 'transparent', color: '#55555f', borderColor: 'rgba(255,255,255,0.08)' }}>
+                  {c}
+                </button>
+              ))}
+            </div>
           </div>
           {/* Negotiable toggle */}
           <div className="flex items-center justify-between px-4 h-11 rounded-[12px]" style={inputStyle}>
