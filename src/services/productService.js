@@ -25,6 +25,16 @@ export async function toggleWishlist(productId) {
   return data
 }
 
+export async function updateProduct(id, data) {
+  const { data: res } = await api.put(`/products/${id}`, data)
+  return res
+}
+
+export async function deleteProduct(id) {
+  const { data } = await api.delete(`/products/${id}`)
+  return data
+}
+
 export async function uploadImages(files) {
   const formData = new FormData()
   files.forEach(f => formData.append('images', f))

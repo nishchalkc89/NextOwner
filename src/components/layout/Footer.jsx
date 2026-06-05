@@ -1,13 +1,15 @@
 import { motion } from 'framer-motion'
-import { AtSign, Send, Globe, Mail, Heart } from 'lucide-react'
+import { AtSign, Send, Globe, Mail } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 const QUICK = [
-  { label: 'About Us',       path: '/about'        },
-  { label: 'How it Works',   path: '/how-it-works'  },
-  { label: 'Safety Tips',    path: '/safety'        },
-  { label: 'Contact',        path: '/contact'       },
-  { label: 'Privacy Policy', path: '/privacy'       },
+  { label: 'About Us',          path: '/about'        },
+  { label: 'How it Works',      path: '/how-it-works'  },
+  { label: 'Safety Tips',       path: '/safety'        },
+  { label: 'Contact',           path: '/contact'       },
+  { label: 'Privacy Policy',    path: '/privacy'       },
+  { label: 'Terms & Conditions',path: '/terms'         },
+  { label: 'Help Center',       path: '/help'          },
 ]
 
 const CATS = [
@@ -160,27 +162,47 @@ export default function Footer() {
 
         {/* ── Bottom bar ── */}
         <div
-          className="flex flex-col lg:flex-row items-center justify-between gap-2 pt-5"
+          className="pt-5"
           style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}
         >
-          <p className="text-gray-700 text-[11px] font-medium flex items-center gap-1.5">
-            Made with <Heart size={10} className="text-red-500 fill-red-500" /> for students ·{' '}
-            © 2025 NextOwner ·{' '}
-            <a href={`mailto:${SUPPORT_EMAIL}`} className="hover:text-orange-400 transition-colors" style={{ color: '#37373f' }}>
-              Support
-            </a>
-          </p>
-          <div className="flex items-center gap-4">
-            {['Privacy', 'Terms', 'Contact'].map(l => (
-              <motion.button
-                key={l}
-                whileHover={{ color: '#fb923c' }}
-                onClick={() => navigate(l === 'Privacy' ? '/privacy' : l === 'Contact' ? '/contact' : '/')}
-                className="text-gray-700 text-[11px] hover:text-orange-400 transition-colors"
-              >
-                {l}
-              </motion.button>
+          {/* Links row */}
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mb-3">
+            {[
+              { label: 'Support',          href: `mailto:${SUPPORT_EMAIL}?subject=NextOwner Support`, external: true },
+              { label: 'Privacy Policy',   path: '/privacy'  },
+              { label: 'Terms & Conditions', path: '/terms'  },
+              { label: 'Contact Us',       path: '/contact'  },
+              { label: 'About Us',         path: '/about'    },
+              { label: 'Help Center',      path: '/help'     },
+            ].map(({ label, path, href, external }) => (
+              external
+                ? <a key={label} href={href}
+                    className="text-gray-600 text-[11px] hover:text-orange-400 transition-colors font-medium"
+                    rel="noopener noreferrer">{label}</a>
+                : <motion.button key={label} whileHover={{ color: '#fb923c' }}
+                    onClick={() => navigate(path)}
+                    className="text-gray-600 text-[11px] hover:text-orange-400 transition-colors font-medium">
+                    {label}
+                  </motion.button>
             ))}
+          </div>
+          {/* Credit row */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-1.5">
+            <p className="text-gray-700 text-[11px] font-medium">
+              © 2025 NextOwner — The campus marketplace
+            </p>
+            <p className="text-gray-700 text-[11px] font-medium flex items-center gap-1">
+              Made by{' '}
+              <a
+                href="https://nishchalkc.com.np/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold hover:text-orange-400 transition-colors"
+                style={{ color: '#7c6af7' }}
+              >
+                Nishchal KC
+              </a>
+            </p>
           </div>
         </div>
 

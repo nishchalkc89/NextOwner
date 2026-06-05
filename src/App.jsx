@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Toaster } from 'react-hot-toast'
@@ -13,6 +13,7 @@ import MessagesLayout  from './components/layout/MessagesLayout'
 import InstallPrompt   from './components/ui/InstallPrompt'
 import ScrollToTop     from './components/utils/ScrollToTop'
 
+/* ── Core shell pages — eagerly loaded ── */
 import SplashScreen      from './pages/SplashScreen'
 import HomePage          from './pages/HomePage'
 import SearchPage        from './pages/SearchPage'
@@ -20,23 +21,38 @@ import SellPage          from './pages/SellPage'
 import MessagesPage      from './pages/MessagesPage'
 import ChatPage          from './pages/ChatPage'
 import ProfilePage       from './pages/ProfilePage'
-import LoginPage         from './pages/LoginPage'
-import VerificationPage  from './pages/VerificationPage'
-import ProductDetailPage from './pages/ProductDetailPage'
-import SellerProfilePage from './pages/SellerProfilePage'
-import NotificationsPage from './pages/NotificationsPage'
-import SettingsPage      from './pages/SettingsPage'
-import HelpPage          from './pages/HelpPage'
-import SuspendedPage     from './pages/SuspendedPage'
-import AboutPage         from './pages/info/AboutPage'
-import ContactPage       from './pages/info/ContactPage'
-import HowItWorksPage    from './pages/info/HowItWorksPage'
-import SafetyTipsPage    from './pages/info/SafetyTipsPage'
-import PrivacyPolicyPage from './pages/info/PrivacyPolicyPage'
-import AdminLoginPage      from './pages/admin/AdminLoginPage'
-import AdminDashboard      from './pages/admin/AdminDashboard'
-import ForgotPasswordPage  from './pages/ForgotPasswordPage'
-import ResetPasswordPage   from './pages/ResetPasswordPage'
+
+/* ── Secondary pages — lazy loaded for faster initial bundle ── */
+const LoginPage         = lazy(() => import('./pages/LoginPage'))
+const VerificationPage  = lazy(() => import('./pages/VerificationPage'))
+const ProductDetailPage = lazy(() => import('./pages/ProductDetailPage'))
+const SellerProfilePage = lazy(() => import('./pages/SellerProfilePage'))
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage'))
+const SettingsPage      = lazy(() => import('./pages/SettingsPage'))
+const HelpPage          = lazy(() => import('./pages/HelpPage'))
+const SuspendedPage     = lazy(() => import('./pages/SuspendedPage'))
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
+const ResetPasswordPage  = lazy(() => import('./pages/ResetPasswordPage'))
+
+/* ── Info pages — lazy loaded ── */
+const AboutPage         = lazy(() => import('./pages/info/AboutPage'))
+const ContactPage       = lazy(() => import('./pages/info/ContactPage'))
+const HowItWorksPage    = lazy(() => import('./pages/info/HowItWorksPage'))
+const SafetyTipsPage    = lazy(() => import('./pages/info/SafetyTipsPage'))
+const PrivacyPolicyPage = lazy(() => import('./pages/info/PrivacyPolicyPage'))
+const TermsPage         = lazy(() => import('./pages/info/TermsPage'))
+
+/* ── Admin pages — lazy loaded ── */
+const AdminLoginPage    = lazy(() => import('./pages/admin/AdminLoginPage'))
+const AdminDashboard    = lazy(() => import('./pages/admin/AdminDashboard'))
+
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#0c0c10' }}>
+      <div className="w-7 h-7 rounded-full border-2 border-[#7c6af7]/30 border-t-[#7c6af7] animate-spin" />
+    </div>
+  )
+}
 
 /* Shell routes show the nav chrome */
 const SHELL_ROUTES = ['/', '/search', '/sell', '/messages', '/profile']
@@ -109,42 +125,45 @@ function AppShell() {
       {/* Page content */}
       <div className={showShell ? 'lg:ml-[240px] min-w-0' : 'min-w-0'}>
         <PageTransition>
-          <Routes>
-            {/* ── Shell pages ── */}
-            <Route path="/"       element={<HomePage />}    />
-            <Route path="/search" element={<SearchPage />}  />
-            <Route path="/sell"   element={<SellPage />}    />
-            <Route path="/profile" element={<ProfilePage />} />
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              {/* ── Shell pages ── */}
+              <Route path="/"       element={<HomePage />}    />
+              <Route path="/search" element={<SearchPage />}  />
+              <Route path="/sell"   element={<SellPage />}    />
+              <Route path="/profile" element={<ProfilePage />} />
 
-            {/* ── Messages: nested layout for desktop split-pane ── */}
-            <Route path="/messages" element={<MessagesLayout />}>
-              <Route index         element={<MessagesPage />} />
-              <Route path=":chatId" element={<ChatPage />}   />
-            </Route>
+              {/* ── Messages: nested layout for desktop split-pane ── */}
+              <Route path="/messages" element={<MessagesLayout />}>
+                <Route index         element={<MessagesPage />} />
+                <Route path=":chatId" element={<ChatPage />}   />
+              </Route>
 
-            {/* ── Content pages ── */}
-            <Route path="/product/:id"  element={<ProductDetailPage />} />
-            <Route path="/login"           element={<LoginPage />}          />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
-            <Route path="/verify"       element={<VerificationPage />}  />
-            <Route path="/user/:userId" element={<SellerProfilePage />} />
-            <Route path="/notifications" element={<NotificationsPage />} />
-            <Route path="/settings"     element={<SettingsPage />}      />
-            <Route path="/help"         element={<HelpPage />}          />
-            <Route path="/suspended"    element={<SuspendedPage />}     />
+              {/* ── Content pages ── */}
+              <Route path="/product/:id"           element={<ProductDetailPage />} />
+              <Route path="/login"                 element={<LoginPage />}         />
+              <Route path="/forgot-password"       element={<ForgotPasswordPage />} />
+              <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+              <Route path="/verify"                element={<VerificationPage />}  />
+              <Route path="/user/:userId"          element={<SellerProfilePage />} />
+              <Route path="/notifications"         element={<NotificationsPage />} />
+              <Route path="/settings"              element={<SettingsPage />}      />
+              <Route path="/help"                  element={<HelpPage />}          />
+              <Route path="/suspended"             element={<SuspendedPage />}     />
 
-            {/* ── Info pages ── */}
-            <Route path="/about"       element={<AboutPage />}         />
-            <Route path="/contact"     element={<ContactPage />}       />
-            <Route path="/how-it-works" element={<HowItWorksPage />}   />
-            <Route path="/safety"      element={<SafetyTipsPage />}    />
-            <Route path="/privacy"     element={<PrivacyPolicyPage />} />
+              {/* ── Info pages ── */}
+              <Route path="/about"        element={<AboutPage />}         />
+              <Route path="/contact"      element={<ContactPage />}       />
+              <Route path="/how-it-works" element={<HowItWorksPage />}   />
+              <Route path="/safety"       element={<SafetyTipsPage />}    />
+              <Route path="/privacy"      element={<PrivacyPolicyPage />} />
+              <Route path="/terms"        element={<TermsPage />}         />
 
-            {/* ── Admin ── */}
-            <Route path="/admin"           element={<AdminLoginPage />}   />
-            <Route path="/admin/dashboard" element={<AdminDashboard />}  />
-          </Routes>
+              {/* ── Admin ── */}
+              <Route path="/admin"           element={<AdminLoginPage />}  />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            </Routes>
+          </Suspense>
         </PageTransition>
       </div>
 

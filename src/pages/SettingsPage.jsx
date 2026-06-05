@@ -4,6 +4,7 @@ import {
   ArrowLeft, User, Lock, Bell, Trash2, ChevronRight,
   Eye, EyeOff, Shield, LogOut, Check, X,
   BellRing, Database, Info, Settings, Sliders,
+  Download, RefreshCw,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
@@ -193,6 +194,232 @@ function DeleteModal({ onClose, onConfirm }) {
   )
 }
 
+/* ── Data & Storage Modal ────────────────────────── */
+function DataStorageModal({ onClose, user }) {
+  const [clearing, setClearing] = useState(false)
+
+  const getStorageSize = () => {
+    try {
+      let total = 0
+      for (const key of Object.keys(localStorage)) {
+        total += (localStorage[key].length + key.length) * 2
+      }
+      return (total / 1024).toFixed(1)
+    } catch { return '0.0' }
+  }
+
+  const clearCache = async () => {
+    setClearing(true)
+    await new Promise(r => setTimeout(r, 600))
+    const keep = new Set(['no_token', 'no_splash'])
+    Object.keys(localStorage).forEach(k => { if (!keep.has(k)) localStorage.removeItem(k) })
+    setClearing(false)
+    toast.success('App cache cleared!')
+  }
+
+  const downloadData = () => {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      profile: {
+        name:        user.name,
+        email:       user.email,
+        university:  user.university,
+        country:     user.country,
+        isVerified:  user.isVerified,
+        createdAt:   user.createdAt,
+      },
+      note: 'This export contains your profile information. For full data (listings, messages) contact support.',
+    }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    a.href     = url
+    a.download = `nextowner-data-${(user.name || 'user').toLowerCase().replace(/\s+/g, '-')}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success('Data downloaded!')
+  }
+
+  const storageKB = getStorageSize()
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(8px)' }}
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.92, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.92, opacity: 0 }}
+        transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+        onClick={e => e.stopPropagation()}
+        className="w-full max-w-sm rounded-[24px] p-6 space-y-4"
+        style={{ background: '#13131a', border: '1px solid rgba(255,255,255,0.09)' }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-[11px] flex items-center justify-center"
+              style={{ background: 'rgba(255,255,255,0.06)' }}>
+              <Database size={15} style={{ color: '#8a8a9a' }} />
+            </div>
+            <div>
+              <p className="font-black text-[15px]" style={{ color: '#eeeef2' }}>Data & Storage</p>
+              <p className="text-[10px]" style={{ color: '#55555f' }}>Manage your app data</p>
+            </div>
+          </div>
+          <motion.button whileTap={{ scale: 0.88 }} onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center"
+            style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <X size={13} style={{ color: '#8a8a9a' }} />
+          </motion.button>
+        </div>
+
+        {/* Storage info */}
+        <div className="rounded-[14px] p-4 space-y-2.5"
+          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          <div className="flex justify-between items-center">
+            <span className="text-[12px]" style={{ color: '#8a8a9a' }}>App cache (localStorage)</span>
+            <span className="text-[12px] font-bold" style={{ color: '#eeeef2' }}>{storageKB} KB</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-[12px]" style={{ color: '#8a8a9a' }}>Image cache</span>
+            <span className="text-[12px] font-semibold" style={{ color: '#55555f' }}>Managed by browser</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-[12px]" style={{ color: '#8a8a9a' }}>Service worker cache</span>
+            <span className="text-[12px] font-semibold" style={{ color: '#55555f' }}>Auto-managed (PWA)</span>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <motion.button
+          whileTap={{ scale: 0.97 }} onClick={clearCache} disabled={clearing}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-[12px] font-bold text-[13px] disabled:opacity-60"
+          style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.09)', color: '#eeeef2' }}
+        >
+          {clearing
+            ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Clearing…</>
+            : <><RefreshCw size={14} /> Clear App Cache</>}
+        </motion.button>
+
+        <motion.button
+          whileTap={{ scale: 0.97 }} onClick={downloadData}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-[12px] font-bold text-[13px] text-white"
+          style={{ background: 'linear-gradient(135deg,#7c6af7,#5c4ef2)', boxShadow: '0 4px 18px rgba(124,106,247,0.25)' }}
+        >
+          <Download size={14} /> Download My Data
+        </motion.button>
+
+        <p className="text-[10px] text-center leading-relaxed" style={{ color: '#37373f' }}>
+          Clearing cache won't sign you out or delete your listings.
+        </p>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+/* ── Account Privacy Modal ───────────────────────── */
+function AccountPrivacyModal({ onClose }) {
+  const PREFS_KEY = 'no_privacy_prefs'
+  const saved = (() => {
+    try { return JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') } catch { return {} }
+  })()
+  const [publicProfile,   setPublicProfile]   = useState(saved.publicProfile   ?? true)
+  const [showOnlineStatus, setShowOnlineStatus] = useState(saved.showOnlineStatus ?? true)
+  const [saving, setSaving] = useState(false)
+
+  const handleSave = async () => {
+    setSaving(true)
+    const prefs = { publicProfile, showOnlineStatus }
+    localStorage.setItem(PREFS_KEY, JSON.stringify(prefs))
+    try { await api.put('/users/profile', { privacyPrefs: prefs }) } catch {}
+    setSaving(false)
+    toast.success('Privacy settings saved!')
+    onClose()
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.78)', backdropFilter: 'blur(8px)' }}
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.92, y: 16 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.92, opacity: 0 }}
+        transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+        onClick={e => e.stopPropagation()}
+        className="w-full max-w-sm rounded-[24px] p-6 space-y-4"
+        style={{ background: '#13131a', border: '1px solid rgba(255,255,255,0.09)' }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-[11px] flex items-center justify-center"
+              style={{ background: 'rgba(56,189,248,0.10)' }}>
+              <Shield size={15} style={{ color: '#38bdf8' }} />
+            </div>
+            <div>
+              <p className="font-black text-[15px]" style={{ color: '#eeeef2' }}>Account Privacy</p>
+              <p className="text-[10px]" style={{ color: '#55555f' }}>Control your visibility</p>
+            </div>
+          </div>
+          <motion.button whileTap={{ scale: 0.88 }} onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center"
+            style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <X size={13} style={{ color: '#8a8a9a' }} />
+          </motion.button>
+        </div>
+
+        <div className="rounded-[14px] overflow-hidden"
+          style={{ background: '#0e0e16', border: '1px solid rgba(255,255,255,0.07)' }}>
+          {[
+            {
+              label: 'Public Profile',
+              sub: 'Allow anyone to view your listings and profile',
+              value: publicProfile,
+              onChange: setPublicProfile,
+            },
+            {
+              label: 'Show Online Status',
+              sub: 'Let buyers and sellers see when you\'re active',
+              value: showOnlineStatus,
+              onChange: setShowOnlineStatus,
+            },
+          ].map(({ label, sub, value, onChange }, i, arr) => (
+            <div key={label}
+              className="flex items-center gap-3 px-4 py-3.5"
+              style={{ borderBottom: i < arr.length - 1 ? '1px solid rgba(255,255,255,0.055)' : 'none' }}>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-semibold" style={{ color: '#eeeef2' }}>{label}</p>
+                <p className="text-[11px] mt-0.5 leading-snug" style={{ color: '#55555f' }}>{sub}</p>
+              </div>
+              <Toggle value={value} onChange={onChange} />
+            </div>
+          ))}
+        </div>
+
+        <div className="rounded-[12px] p-3"
+          style={{ background: 'rgba(56,189,248,0.05)', border: '1px solid rgba(56,189,248,0.12)' }}>
+          <p className="text-[11px] leading-relaxed" style={{ color: '#55555f' }}>
+            <span className="font-semibold" style={{ color: '#38bdf8' }}>Note:</span>{' '}
+            Private profiles still show listings to logged-in students. Your email is never shared publicly.
+          </p>
+        </div>
+
+        <motion.button
+          whileTap={{ scale: 0.97 }} onClick={handleSave} disabled={saving}
+          className="w-full py-3 rounded-[12px] font-bold text-[13px] text-white flex items-center justify-center gap-2 disabled:opacity-50"
+          style={{ background: 'linear-gradient(135deg,#7c6af7,#5c4ef2)', boxShadow: '0 4px 18px rgba(124,106,247,0.25)' }}
+        >
+          {saving
+            ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            : <><Check size={14} /> Save Privacy Settings</>}
+        </motion.button>
+      </motion.div>
+    </motion.div>
+  )
+}
+
 /* ── Setting row ─────────────────────────────────── */
 function SettingRow({ icon: Icon, iconColor = '#8a8a9a', iconBg = 'rgba(255,255,255,0.05)',
   label, sub, onPress, danger = false, right, badge }) {
@@ -233,7 +460,7 @@ const NAV = [
 ]
 
 /* ── Section content ─────────────────────────────── */
-function SectionContent({ name, user, setShowPwd, setShowDel, notifPrefs, setNotifPrefs, navigate, handleLogout }) {
+function SectionContent({ name, user, setShowPwd, setShowDel, setShowDataStorage, setShowPrivacy, notifPrefs, setNotifPrefs, navigate, handleLogout }) {
   if (name === 'Account') return (
     <div className="space-y-4">
       {/* Profile preview card */}
@@ -324,13 +551,13 @@ function SectionContent({ name, user, setShowPwd, setShowDel, notifPrefs, setNot
         />
         <SettingRow
           icon={Database} iconColor="#8a8a9a" iconBg="rgba(255,255,255,0.05)"
-          label="Data & Storage" sub="Manage your stored data and cache"
-          onPress={() => toast('Coming soon')}
+          label="Data & Storage" sub="Cache, storage usage & download your data"
+          onPress={() => setShowDataStorage(true)}
         />
         <SettingRow
-          icon={Shield} iconColor="#8a8a9a" iconBg="rgba(255,255,255,0.05)"
+          icon={Shield} iconColor="#38bdf8" iconBg="rgba(56,189,248,0.10)"
           label="Account Privacy" sub="Control who can see your profile"
-          onPress={() => toast('Coming soon')}
+          onPress={() => setShowPrivacy(true)}
         />
       </div>
       <div className="rounded-[14px] p-4"
@@ -411,9 +638,11 @@ function SectionContent({ name, user, setShowPwd, setShowDel, notifPrefs, setNot
 export default function SettingsPage() {
   const navigate  = useNavigate()
   const { user, logout } = useAuth()
-  const [showPassword,  setShowPwd]  = useState(false)
-  const [showDelete,    setShowDel]  = useState(false)
-  const [activeSection, setSection]  = useState('Account')
+  const [showPassword,    setShowPwd]         = useState(false)
+  const [showDelete,      setShowDel]         = useState(false)
+  const [showDataStorage, setShowDataStorage] = useState(false)
+  const [showPrivacy,     setShowPrivacy]     = useState(false)
+  const [activeSection,   setSection]         = useState('Account')
   const [notifPrefs, setNotifPrefs]  = useState({
     messages: true, deals: true, verification: true, marketing: false,
   })
@@ -524,8 +753,10 @@ export default function SettingsPage() {
 
       {/* Modals */}
       <AnimatePresence>
-        {showPassword && <PasswordModal onClose={() => setShowPwd(false)} />}
-        {showDelete   && <DeleteModal   onClose={() => setShowDel(false)} onConfirm={handleDeleteAccount} />}
+        {showPassword    && <PasswordModal        onClose={() => setShowPwd(false)} />}
+        {showDelete      && <DeleteModal          onClose={() => setShowDel(false)} onConfirm={handleDeleteAccount} />}
+        {showDataStorage && <DataStorageModal     onClose={() => setShowDataStorage(false)} user={user} />}
+        {showPrivacy     && <AccountPrivacyModal  onClose={() => setShowPrivacy(false)} />}
       </AnimatePresence>
 
       {/* ── Mobile: single-column scrollable ── */}
@@ -546,6 +777,8 @@ export default function SettingsPage() {
               user={user}
               setShowPwd={setShowPwd}
               setShowDel={setShowDel}
+              setShowDataStorage={setShowDataStorage}
+              setShowPrivacy={setShowPrivacy}
               notifPrefs={notifPrefs}
               setNotifPrefs={setNotifPrefs}
               navigate={navigate}
