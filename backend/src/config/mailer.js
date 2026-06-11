@@ -37,7 +37,8 @@ function createTransport() {
     secure,
     auth:   { user, pass },
     tls:    { rejectUnauthorized: false },
-    connectionTimeout: 15000,   // 15s — important on cloud (cold starts)
+    family: 4,               // force IPv4 — Render cannot reach Gmail over IPv6
+    connectionTimeout: 15000,
     greetingTimeout:   10000,
     socketTimeout:     15000,
   })
