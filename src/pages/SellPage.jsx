@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Camera, Image as ImageIcon, Tag, MapPin, AlignLeft,
@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { uploadImages, createProduct } from '../services/productService'
+import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
 
 const CATEGORIES = [
@@ -52,6 +53,13 @@ function GlassInput({ icon: Icon, iconColor = '#6b7280', ...props }) {
 }
 
 export default function SellPage() {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!user) navigate('/login')
+  }, [user, navigate])
+
   const [images,     setImages]     = useState([])
   const [form,       setForm]       = useState({
     title: '', description: '', price: '',
@@ -62,7 +70,6 @@ export default function SellPage() {
   const [showCatDD,  setShowCatDD]  = useState(false)
   const [showCondDD, setShowCondDD] = useState(false)
   const [uploading,  setUploading]  = useState(false)
-  const navigate = useNavigate()
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
   const handleImagePick = (e) => {
@@ -77,9 +84,10 @@ export default function SellPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!images.length)     return toast.error('Add at least one photo')
-    if (!form.category)     return toast.error('Select a category')
-    if (!form.title.trim()) return toast.error('Add a title')
+    if (!images.length)               return toast.error('Add at least one photo')
+    if (!form.category)               return toast.error('Select a category')
+    if (!form.title.trim())           return toast.error('Add a title')
+    if (!form.price || Number(form.price) < 1) return toast.error('Enter a valid price')
     setUploading(true)
     try {
       const files = images.map(i => i.file).filter(Boolean)

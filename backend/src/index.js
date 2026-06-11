@@ -28,6 +28,7 @@ const allowedOrigins = [
   'http://localhost:5174',
   'http://localhost:5175',
   'http://localhost:5176',
+  'https://next-owner-two.vercel.app',
   ...(process.env.CLIENT_URL ? [process.env.CLIENT_URL] : []),
   ...(process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',').map(s => s.trim()) : []),
 ]

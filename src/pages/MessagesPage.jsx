@@ -292,11 +292,9 @@ export default function MessagesPage() {
                   {/* Status indicator */}
                   {isUnread ? (
                     <div
-                      className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
+                      className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                       style={{ background: '#7c6af7', boxShadow: '0 0 8px rgba(124,106,247,0.5)' }}
-                    >
-                      <span className="text-white text-[9px] font-black">1</span>
-                    </div>
+                    />
                   ) : (
                     <CheckCheck size={14} style={{ color: '#34d399', flexShrink: 0, opacity: 0.65 }} />
                   )}

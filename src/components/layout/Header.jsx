@@ -75,7 +75,11 @@ export default function Header({ desktopMode = false }) {
           {/* Bell */}
           <motion.button
             whileTap={{ scale: 0.85 }}
-            onClick={() => { setUnread(0); navigate('/notifications') }}
+            onClick={() => {
+              setUnread(0)
+              api.put('/notifications/read').catch(() => {})
+              navigate('/notifications')
+            }}
             className="relative w-9 h-9 rounded-[10px] flex items-center justify-center"
             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}
           >
@@ -156,7 +160,11 @@ export default function Header({ desktopMode = false }) {
         {/* Bell */}
         <motion.button
           whileTap={{ scale: 0.82 }}
-          onClick={() => { setUnread(0); navigate('/notifications') }}
+          onClick={() => {
+            setUnread(0)
+            api.put('/notifications/read').catch(() => {})
+            navigate('/notifications')
+          }}
           className="relative w-10 h-10 rounded-[12px] flex items-center justify-center"
           style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}
         >

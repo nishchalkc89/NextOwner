@@ -25,7 +25,7 @@ router.post('/register',
       const user = await User.create({ name, email, password })
       // Fire-and-forget welcome email
       sendWelcome({ to: email, name }).catch(() => {})
-      res.status(201).json({ token: sign(user._id), user: sanitize(user) })
+      res.status(201).json({ token: sign(user._id), user: sanitize(user), isNew: true })
     } catch (err) {
       res.status(500).json({ message: err.message })
     }
@@ -52,7 +52,7 @@ router.post('/login',
           code: 'BANNED',
         })
       }
-      res.json({ token: sign(user._id), user: sanitize(user) })
+      res.json({ token: sign(user._id), user: sanitize(user), isNew: false })
     } catch (err) {
       res.status(500).json({ message: err.message })
     }

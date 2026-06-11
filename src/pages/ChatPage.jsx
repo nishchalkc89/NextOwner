@@ -389,6 +389,7 @@ export default function ChatPage() {
 
         <motion.button
           whileTap={{ scale: 0.88 }}
+          onClick={() => otherUser?._id && navigate(`/user/${otherUser._id}`)}
           className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
           style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
         >

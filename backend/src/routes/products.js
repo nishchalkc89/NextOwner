@@ -9,7 +9,8 @@ const SORT_MAP = {
   oldest:     { createdAt:  1 },
   price_asc:  { price:      1 },
   price_desc: { price:     -1 },
-  popular:    { views:     -1 },   // "trending" alias → most viewed
+  popular:    { views:     -1 },
+  trending:   { views:     -1 },
 }
 
 // ─────────────────────────────────────────────────────────
@@ -37,12 +38,22 @@ router.get('/', async (req, res) => {
   try {
     const {
       q, category, status = 'active',
-      sort = 'newest', page = 1, limit = 20, featured,
+      sort = 'newest', page = 1, limit = 20,
+      featured, condition, price, verified,
     } = req.query
 
     const filter = { status }
     if (category && category !== 'All') filter.category = category
     if (featured === '1') filter.featured = true
+    if (condition && condition !== 'Any') filter.condition = condition
+
+    // price param format: "min-max" e.g. "500-2000" or "10000-" for open-ended
+    if (price) {
+      const [min, max] = price.split('-')
+      if (min) filter.price = { ...filter.price, $gte: Number(min) }
+      if (max) filter.price = { ...filter.price, $lte: Number(max) }
+    }
+
     if (q) {
       const terms = q.trim().split(/\s+/).filter(Boolean)
       const regex = new RegExp(terms.join('|'), 'i')
@@ -53,6 +64,12 @@ router.get('/', async (req, res) => {
         { university:  { $regex: regex } },
         { brand:       { $regex: regex } },
       ]
+    }
+
+    // Verified sellers filter — fetch verified user IDs first
+    if (verified === '1') {
+      const verifiedUsers = await User.find({ isVerified: true }).select('_id')
+      filter.seller = { $in: verifiedUsers.map(u => u._id) }
     }
 
     const products = await Product.find(filter)

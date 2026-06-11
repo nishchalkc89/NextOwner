@@ -29,7 +29,9 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [imgIdx,     setImgIdx]     = useState(0)
-  const [liked,      setLiked]      = useState(false)
+  const [liked,      setLiked]      = useState(() =>
+    user?.wishlist ? user.wishlist.some(wid => String(wid) === String(id)) : false
+  )
   const [chatLoading,setChatLoading] = useState(false)
   const navigate = useNavigate()
   const { user } = useAuth()
@@ -333,11 +335,10 @@ export default function ProductDetailPage() {
           </motion.button>
           <motion.button
             whileTap={{ scale: 0.95 }}
-            onClick={handleChat}
-            disabled={chatLoading}
-            className="flex-1 py-3.5 rounded-2xl gradient-orange text-white font-bold text-sm flex items-center justify-center gap-2 shadow-orange disabled:opacity-60"
+            onClick={() => product?.seller?._id && navigate(`/user/${product.seller._id}`)}
+            className="flex-1 py-3.5 rounded-2xl gradient-orange text-white font-bold text-sm flex items-center justify-center gap-2 shadow-orange"
           >
-            <Phone size={16} /> Contact
+            <Phone size={16} /> View Seller
           </motion.button>
         </div>
       </div>

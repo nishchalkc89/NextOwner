@@ -24,7 +24,7 @@ const COND = {
   'Poor':      { bg: 'rgba(239,68,68,0.18)',  color: '#f87171',  border: 'rgba(239,68,68,0.28)'  },
 }
 
-export default function ProductCard({ product = {}, index = 0, wishlistedIds = [], compact = false }) {
+export default function ProductCard({ product = {}, index = 0, compact = false }) {
   const {
     _id, productId,
     title     = 'Product',
@@ -41,7 +41,10 @@ export default function ProductCard({ product = {}, index = 0, wishlistedIds = [
   const isNew = createdAt && (Date.now() - new Date(createdAt)) < 86400000
   const cond  = COND[condition]
 
-  const [liked,     setLiked]  = useState(wishlistedIds.includes(id))
+  const { user } = useAuth()
+  const [liked, setLiked] = useState(() =>
+    user?.wishlist ? user.wishlist.some(wid => String(wid) === String(id)) : false
+  )
   const [imgLoaded, setLoaded] = useState(false)
   const navigate = useNavigate()
   const { user } = useAuth()

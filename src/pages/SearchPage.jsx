@@ -36,7 +36,7 @@ const SORT_OPTIONS = [
   { label: 'Price ↓',   value: 'price_desc' },
   { label: 'Trending',  value: 'trending'   },
 ]
-const RECENT = ['MacBook Air', 'iPhone 14', 'Cycle', 'Engineering Books', 'Guitar']
+const DEFAULT_RECENT = ['MacBook Air', 'iPhone 14', 'Cycle', 'Engineering Books', 'Guitar']
 const POPULAR = [
   { label: 'Laptops',  emoji: '💻' }, { label: 'Mobiles', emoji: '📱' },
   { label: 'Cycles',   emoji: '🚲' }, { label: 'Books',   emoji: '📚' },
@@ -211,7 +211,8 @@ export default function SearchPage() {
   const [verifiedF,setVerifiedF]= useState(false)
 
   // UI state
-  const [showFilters, setShowFilters] = useState(false)
+  const [showFilters,    setShowFilters]    = useState(false)
+  const [recentSearches, setRecentSearches] = useState(DEFAULT_RECENT)
 
   // Results state
   const [products, setProducts] = useState([])
@@ -245,11 +246,13 @@ export default function SearchPage() {
     setLoading(true)
     try {
       const p = { sort: sortF, limit: 40 }
-      if (query)    p.q        = query
-      if (category) p.category = category
-      if (lat)      p.lat      = lat
-      if (lng)      p.lng      = lng
-      if (verifiedF) p.verified = '1'
+      if (query)              p.q         = query
+      if (category)           p.category  = category
+      if (lat)                p.lat       = lat
+      if (lng)                p.lng       = lng
+      if (verifiedF)          p.verified  = '1'
+      if (priceF)             p.price     = priceF
+      if (condF !== 'Any')    p.condition = condF
       const data = await getProducts(p)
       setProducts(data.products || [])
       setTotal(data.total || 0)
@@ -258,7 +261,7 @@ export default function SearchPage() {
     } finally {
       setLoading(false)
     }
-  }, [query, category, sortF, lat, lng, near, verifiedF])
+  }, [query, category, sortF, lat, lng, near, verifiedF, priceF, condF])
 
   useEffect(() => {
     const t = setTimeout(fetchProducts, query ? 380 : 0)
@@ -410,23 +413,26 @@ export default function SearchPage() {
                 className="space-y-6">
 
                 {/* Recent searches */}
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="font-bold text-[13px]" style={{ color: '#eeeef2' }}>Recent Searches</p>
-                    <button className="text-[11px] font-semibold" style={{ color: '#7c6af7' }}>Clear</button>
+                {recentSearches.length > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="font-bold text-[13px]" style={{ color: '#eeeef2' }}>Recent Searches</p>
+                      <button onClick={() => setRecentSearches([])}
+                        className="text-[11px] font-semibold" style={{ color: '#7c6af7' }}>Clear</button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {recentSearches.map(r => (
+                        <motion.button key={r} whileTap={{ scale: 0.92 }}
+                          onClick={() => setInputVal(r)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium"
+                          style={{ background: '#13131a', border: '1px solid rgba(255,255,255,0.072)', color: '#8a8a9a' }}>
+                          <Clock size={10} style={{ color: '#37373f' }} />
+                          {r}
+                        </motion.button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {RECENT.map(r => (
-                      <motion.button key={r} whileTap={{ scale: 0.92 }}
-                        onClick={() => setInputVal(r)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium"
-                        style={{ background: '#13131a', border: '1px solid rgba(255,255,255,0.072)', color: '#8a8a9a' }}>
-                        <Clock size={10} style={{ color: '#37373f' }} />
-                        {r}
-                      </motion.button>
-                    ))}
-                  </div>
-                </div>
+                )}
 
                 {/* Quick categories */}
                 <div>
