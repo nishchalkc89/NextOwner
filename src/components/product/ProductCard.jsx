@@ -47,7 +47,6 @@ export default function ProductCard({ product = {}, index = 0, compact = false }
   )
   const [imgLoaded, setLoaded] = useState(false)
   const navigate = useNavigate()
-  const { user } = useAuth()
 
   const handleWishlist = async (e) => {
     e.stopPropagation()

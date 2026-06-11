@@ -26,6 +26,8 @@ const COND_COLOR = {
 
 export default function ProductDetailPage() {
   const { id }       = useParams()
+  const navigate = useNavigate()
+  const { user } = useAuth()
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [imgIdx,     setImgIdx]     = useState(0)
@@ -33,8 +35,6 @@ export default function ProductDetailPage() {
     user?.wishlist ? user.wishlist.some(wid => String(wid) === String(id)) : false
   )
   const [chatLoading,setChatLoading] = useState(false)
-  const navigate = useNavigate()
-  const { user } = useAuth()
 
   useEffect(() => {
     getProduct(id)
