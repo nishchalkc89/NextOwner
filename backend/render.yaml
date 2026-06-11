@@ -23,10 +23,8 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
-      - key: MAIL_USER
-        sync: false
-      - key: MAIL_PASS
-        sync: false
+      - key: RESEND_API_KEY
+        sync: false            # paste your Resend API key (resend.com → API Keys)
       - key: SUPPORT_EMAIL
         sync: false
       - key: ADMIN_EMAIL
