@@ -1,38 +1,35 @@
-const { Resend } = require('resend')
+const sgMail = require('@sendgrid/mail')
 
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'nishchalkc370@gmail.com'
 const SUPPORT_NAME  = process.env.SUPPORT_NAME  || 'NextOwner Support'
-const FROM          = `${SUPPORT_NAME} <onboarding@resend.dev>`
+const FROM          = { name: SUPPORT_NAME, email: SUPPORT_EMAIL }
 
-let _resend = null
-function getResend() {
-  if (_resend) return _resend
-  const key = process.env.RESEND_API_KEY
+let _ready = false
+function init() {
+  if (_ready) return true
+  const key = process.env.SENDGRID_API_KEY
   if (!key) {
-    console.warn('[mailer] ⚠️  RESEND_API_KEY not set — email sending is disabled.')
-    return null
+    console.warn('[mailer] ⚠️  SENDGRID_API_KEY not set — email sending is disabled.')
+    return false
   }
-  _resend = new Resend(key)
-  return _resend
+  sgMail.setApiKey(key)
+  _ready = true
+  return true
 }
 
 async function sendMail({ to, subject, html, text }) {
-  const resend = getResend()
-  if (!resend) {
-    console.log(`[mailer] Skipped: "${subject}" → ${to}  (no RESEND_API_KEY)`)
+  if (!init()) {
+    console.log(`[mailer] Skipped: "${subject}" → ${to}  (no SENDGRID_API_KEY)`)
     return { skipped: true }
   }
   try {
-    const { data, error } = await resend.emails.send({ from: FROM, to: [to], subject, html, text })
-    if (error) {
-      console.error(`[mailer] ✗ Failed "${subject}" → ${to}:`, error.message)
-      throw new Error(error.message)
-    }
-    console.log(`[mailer] ✓ Sent "${subject}" → ${to}  (id: ${data.id})`)
-    return data
+    await sgMail.send({ to, from: FROM, subject, html, text })
+    console.log(`[mailer] ✓ Sent "${subject}" → ${to}`)
+    return { sent: true }
   } catch (err) {
-    console.error(`[mailer] ✗ Failed "${subject}" → ${to}:`, err.message)
-    throw err
+    const msg = err?.response?.body?.errors?.[0]?.message || err.message
+    console.error(`[mailer] ✗ Failed "${subject}" → ${to}:`, msg)
+    throw new Error(msg)
   }
 }
 
@@ -82,7 +79,7 @@ function wrap(body) {
 /* ── Welcome ── */
 async function sendWelcome({ to, name }) {
   return sendMail({
-    to, subject: 'Welcome to NextOwner 🎉',
+    to, subject: 'Welcome to NextOwner!',
     html: wrap(`
       <p>Hi <strong>${name}</strong>,</p>
       <p>Welcome to <strong>NextOwner</strong> — India's campus marketplace for students!</p>
@@ -125,7 +122,7 @@ async function sendOtp({ to, name, otp }) {
           </span>
         </div>
       </div>
-      <p style="font-size:12px;color:#52525b">⏱️ This code expires in <strong style="color:#e4e4e7">10 minutes</strong>.</p>
+      <p style="font-size:12px;color:#52525b">This code expires in <strong style="color:#e4e4e7">10 minutes</strong>.</p>
       <p style="font-size:12px;color:#52525b">If you didn't request this, you can safely ignore this email.</p>
     `),
     text: `Your NextOwner verification code is: ${otp}. Expires in 10 minutes.`,
@@ -149,7 +146,7 @@ async function sendSuspensionNotice({ to, name, reason }) {
 /* ── Verification approved ── */
 async function sendVerificationApproved({ to, name }) {
   return sendMail({
-    to, subject: '✅ Student Verification Approved — NextOwner',
+    to, subject: 'Student Verification Approved — NextOwner',
     html: wrap(`
       <p>Hi <strong>${name}</strong>,</p>
       <p>Your student verification has been <strong>approved</strong>! You now have a verified badge on your profile.</p>
@@ -186,13 +183,13 @@ async function sendAdminVerificationAlert({ userName, studentEmail, university, 
     html: wrap(`
       <p><strong>A new student verification request requires your review.</strong></p>
       <div style="background:rgba(124,106,247,0.07);border:1px solid rgba(124,106,247,0.20);border-radius:12px;padding:16px;margin:16px 0;font-size:13px">
-        <p style="margin:0 0 8px"><span style="color:#a79cf9">👤 Name:</span> <strong>${userName}</strong></p>
-        <p style="margin:0 0 8px"><span style="color:#a79cf9">📧 Email:</span> <strong>${studentEmail}</strong></p>
-        <p style="margin:0 0 8px"><span style="color:#a79cf9">🎓 University:</span> <strong>${university || '—'}</strong></p>
-        ${country ? `<p style="margin:0 0 8px"><span style="color:#a79cf9">🌍 Country:</span> <strong>${country}</strong></p>` : ''}
-        <p style="margin:0"><span style="color:#a79cf9">🕐 Submitted:</span> <strong>${ts} IST</strong></p>
+        <p style="margin:0 0 8px"><span style="color:#a79cf9">Name:</span> <strong>${userName}</strong></p>
+        <p style="margin:0 0 8px"><span style="color:#a79cf9">Email:</span> <strong>${studentEmail}</strong></p>
+        <p style="margin:0 0 8px"><span style="color:#a79cf9">University:</span> <strong>${university || '—'}</strong></p>
+        ${country ? `<p style="margin:0 0 8px"><span style="color:#a79cf9">Country:</span> <strong>${country}</strong></p>` : ''}
+        <p style="margin:0"><span style="color:#a79cf9">Submitted:</span> <strong>${ts} IST</strong></p>
       </div>
-      <a href="${adminUrl}" class="cta">Open Admin Dashboard →</a>
+      <a href="${adminUrl}" class="cta">Open Admin Dashboard</a>
     `),
     text: `New verification: ${userName} | ${studentEmail} | ${university} | ${ts}`,
   })
