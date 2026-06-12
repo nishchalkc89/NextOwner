@@ -1,35 +1,36 @@
-const sgMail = require('@sendgrid/mail')
-
 const SUPPORT_EMAIL = process.env.SUPPORT_EMAIL || 'nishchalkc370@gmail.com'
 const SUPPORT_NAME  = process.env.SUPPORT_NAME  || 'NextOwner Support'
-const FROM          = { name: SUPPORT_NAME, email: SUPPORT_EMAIL }
-
-let _ready = false
-function init() {
-  if (_ready) return true
-  const key = process.env.SENDGRID_API_KEY
-  if (!key) {
-    console.warn('[mailer] ⚠️  SENDGRID_API_KEY not set — email sending is disabled.')
-    return false
-  }
-  sgMail.setApiKey(key)
-  _ready = true
-  return true
-}
 
 async function sendMail({ to, subject, html, text }) {
-  if (!init()) {
-    console.log(`[mailer] Skipped: "${subject}" → ${to}  (no SENDGRID_API_KEY)`)
+  const key = process.env.BREVO_API_KEY
+  if (!key) {
+    console.warn(`[mailer] Skipped: "${subject}" → ${to}  (no BREVO_API_KEY)`)
     return { skipped: true }
   }
+  const body = {
+    sender:      { name: SUPPORT_NAME, email: SUPPORT_EMAIL },
+    to:          [{ email: to }],
+    subject,
+    htmlContent: html,
+    textContent: text,
+  }
   try {
-    await sgMail.send({ to, from: FROM, subject, html, text })
-    console.log(`[mailer] ✓ Sent "${subject}" → ${to}`)
-    return { sent: true }
+    const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method:  'POST',
+      headers: { 'accept': 'application/json', 'api-key': key, 'content-type': 'application/json' },
+      body:    JSON.stringify(body),
+    })
+    const data = await res.json()
+    if (!res.ok) {
+      const msg = data?.message || JSON.stringify(data)
+      console.error(`[mailer] ✗ Failed "${subject}" → ${to}:`, msg)
+      throw new Error(msg)
+    }
+    console.log(`[mailer] ✓ Sent "${subject}" → ${to}  (id: ${data.messageId})`)
+    return data
   } catch (err) {
-    const msg = err?.response?.body?.errors?.[0]?.message || err.message
-    console.error(`[mailer] ✗ Failed "${subject}" → ${to}:`, msg)
-    throw new Error(msg)
+    console.error(`[mailer] ✗ Failed "${subject}" → ${to}:`, err.message)
+    throw err
   }
 }
 
@@ -211,7 +212,6 @@ async function sendSupportAck({ to, name, subject: issueSubject }) {
 
 module.exports = {
   SUPPORT_EMAIL,
-  FROM,
   sendMail,
   sendWelcome,
   sendPasswordReset,

@@ -23,8 +23,8 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
-      - key: SENDGRID_API_KEY
-        sync: false            # paste your SendGrid API key (app.sendgrid.com → API Keys)
+      - key: BREVO_API_KEY
+        sync: false            # paste your Brevo API key (app.brevo.com → SMTP & API → API Keys)
       - key: SUPPORT_EMAIL
         sync: false
       - key: ADMIN_EMAIL
